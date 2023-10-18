@@ -152,6 +152,7 @@ def abundance_greedy_clustering(amplicon_file: Path, minseqlen: int, mincount: i
             id = get_identity(align)
             if id < 97 : 
                 is_OTU = True
+                break
             else :
                 is_OTU = False
         if is_OTU :
@@ -184,8 +185,19 @@ def main(): # pragma: no cover
     # Get arguments
     args = get_arguments()
     # Votre programme ici
+    amplicon_file = args.amplicon_file
+    minseqlen = 400
+    mincount = 10
 
-
+    chunk_size = 0
+    kmer_size = 0
+    OTU_list = abundance_greedy_clustering(amplicon_file,
+                                           minseqlen,
+                                           mincount,
+                                           chunk_size,
+                                           kmer_size)
+    write_OTU(OTU_list,args.output_file)
+    print("Done")
 
 if __name__ == '__main__':
     main()

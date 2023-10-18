@@ -108,9 +108,11 @@ def dereplication_fulllength(amplicon_file: Path, minseqlen: int, mincount: int)
     """
     seq_sim_counts = {}
     for seq in read_fasta(amplicon_file, minseqlen):
-        seq_sim_counts[seq]=0
-    for seq in read_fasta(amplicon_file, minseqlen):
-        seq_sim_counts[seq]+=1
+        if seq in seq_sim_counts:
+            seq_sim_counts[seq]+=1
+        else:
+            seq_sim_counts[seq]=1
+        
     key_sorted = sorted(seq_sim_counts , key = seq_sim_counts.get ,reverse = True)
     for k in key_sorted :
         if seq_sim_counts[k] >= mincount :
@@ -142,21 +144,18 @@ def abundance_greedy_clustering(amplicon_file: Path, minseqlen: int, mincount: i
     :param kmer_size: (int) A fournir mais non utilise cette annee
     :return: (list) A list of all the [OTU (str), count (int)] .
     """
-    OTU =[]
     count_repl = dereplication_fulllength(amplicon_file, minseqlen, mincount)
-
-    for sequence, count in count_repl :
+    OTU =[next(count_repl)]
+    for sequence in count_repl :
         is_OTU = True
-        for otu_seq, otu_count in OTU :
-            align = nw.global_align(sequence, otu_seq, matrix=str(Path(__file__).parent / "MATCH"))
+        for otu_seq in OTU :
+            align = nw.global_align(sequence[0], otu_seq[0], matrix=str(Path(__file__).parent / "MATCH"))
             id = get_identity(align)
-            if id < 97 : 
-                is_OTU = True
-                break
-            else :
+            if id >= 97 : 
                 is_OTU = False
+                break                
         if is_OTU :
-            OTU.append([sequence,count])
+            OTU.append([sequence[0],sequence[1]])
     return OTU
 
 
